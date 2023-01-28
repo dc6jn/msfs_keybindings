@@ -1,7 +1,9 @@
 # -*- coding: utf8 -*-
 # msfs inputprofile import script
-# by dc6jn
 #
+# Copyright (c) [2023] [dc6jn]
+
+
 import os, sys
 from pathlib import Path
 import argparse
