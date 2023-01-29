@@ -24,9 +24,8 @@ process_all_files = False
 parser = argparse.ArgumentParser(
     description='Read msfs2020 input device configurations and create readable documents')
 parser.add_argument('filename')
-parser.add_argument('-l', '--language', help='Select which language for descriptions, i.e. en-US, de-DE,...',
+parser.add_argument('-l', '--language', help='Select language for descriptions, i.e. en-US, de-DE,...',
                     action='store', type=str, default='en-US')
-parser.add_argument('-f', '--fill', help='fill areas of differences.', action='store_true')
 parser.add_argument('-c', '--csv', help='Save as CSV.', action='store_true')
 parser.add_argument('-x', '--xls', help='Save as Excel xls.', action='store_true')
 parser.add_argument('-t', '--tex', help='Save as Latex-Template', action='store_true')
