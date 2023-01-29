@@ -105,8 +105,7 @@ if usercfg_ms.is_file():
 elif usercfg_steam.is_file():
     log.info("autodetected  steam version of flight simulator")
     usercfg_path = usercfg_steam
-
-if 'usercfgpath' in args:
+elif args.usercfgpath is not None:
     usercfg_manual = Path(args.usercfgpath + "\\UserCfg.opt").absolute()
     if usercfg_manual.is_file():
         usercfg_path = usercfg_manual
