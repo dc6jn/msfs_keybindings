@@ -2,7 +2,8 @@
 # msfs inputprofile import script
 #
 # Copyright (c) 2023 dc6jn
-
+# default input profiles:  c:\Steam\steamapps\common\MicrosoftFlightSimulator\Input\
+# personalized profiles: [steampath]\userdata\[your user number]\1250410\remote
 
 import os, sys
 from pathlib import Path
@@ -23,7 +24,7 @@ process_all_files = False
 
 parser = argparse.ArgumentParser(
     description='Read msfs2020 input device configurations and create readable documents')
-parser.add_argument('filename',nargs="?")
+parser.add_argument('filename', nargs="?", help="if provided a path to all inputprofiles or a single inputprofile")
 parser.add_argument('-l', '--language', help='Select language for descriptions, i.e. en-US, de-DE,...',
                     action='store', type=str, default='en-US')
 parser.add_argument('-c', '--csv', help='Save as CSV.', action='store_true')
@@ -91,33 +92,35 @@ else:
     outputpath = currentpath
     log.info(f"Using outputpath {outputpath}")
 
-usercfg_path = None
-appdata = os.getenv('APPDATA')
-localappdata = os.getenv('LOCALAPPDATA')
 
-# set UserCfgMS=%LOCALAPPDATA%\Packages\Microsoft.FlightSimulator_8wekyb3d8bbwe\LocalCache\UserCfg.opt
-# set UserCfgSteam=%APPDATA%\Microsoft Flight Simulator\UserCfg.opt
-usercfg_ms = Path(localappdata + "\\Packages\\Microsoft.FlightSimulator_8wekyb3d8bbwe\\LocalCache\\UserCfg.opt")
-usercfg_steam = Path(appdata + "\\Microsoft Flight Simulator\\UserCfg.opt")
-if usercfg_ms.is_file():
-    log.info("autodetected  MS-Version of flight simulator")
-    usercfg_path = usercfg_ms
-elif usercfg_steam.is_file():
-    log.info("autodetected  steam version of flight simulator")
-    usercfg_path = usercfg_steam
-elif args.usercfgpath is not None:
-    usercfg_manual = Path(args.usercfgpath + "\\UserCfg.opt").absolute()
-    if usercfg_manual.is_file():
-        usercfg_path = usercfg_manual
-        log.info(f"manual override for config path, using {usercfg_path}")
+def get_userconfig_path():
+    # find UserCfg.opt
+    usercfg_path = None
+    appdata = os.getenv('APPDATA')
+    localappdata = os.getenv('LOCALAPPDATA')
+    usercfg_ms = Path(localappdata + "\\Packages\\Microsoft.FlightSimulator_8wekyb3d8bbwe\\LocalCache\\UserCfg.opt")
+    usercfg_steam = Path(appdata + "\\Microsoft Flight Simulator\\UserCfg.opt")
+    if usercfg_ms.is_file():
+        log.info("autodetected  MS-Version of flight simulator")
+        usercfg_path = usercfg_ms
+    elif usercfg_steam.is_file():
+        log.info("autodetected  steam version of flight simulator")
+        usercfg_path = usercfg_steam
+    elif args.usercfgpath is not None:
+        usercfg_manual = Path(args.usercfgpath + "\\UserCfg.opt").absolute()
+        if usercfg_manual.is_file():
+            usercfg_path = usercfg_manual
+            log.info(f"manual override for config path, using {usercfg_path}")
+    if usercfg_path is None:
+        log.error(f"no valid config path provided or found")
+    return usercfg_path
 
-if usercfg_path is None:
-    log.error(f"no valid config path provided or found")
-    exit()
+
+usercfg_path = get_userconfig_path()
 
 # hier liegen die Verzeichnisse mit den Bildern: c:\msfs\fs-base-ui\html_ui\Textures\Menu\Control\
-# InstalledPackagesPath
 
+# from UserCfg.opt we get the InstalledPackagesPath
 with open(usercfg_path, 'r') as file:
     lines = file.readlines()
     for line in lines:
@@ -129,65 +132,70 @@ with open(usercfg_path, 'r') as file:
             ipath = ipath.replace('"', '')
             ipath = ipath.replace("'", '')
             ipath = ipath.replace("\n", '')
-            imagepath = Path(ipath + r'\fs-base-ui\html_ui\Textures\Menu\Control')
-            log.info(imagepath.absolute())
+            log.info(f"Using {Path(ipath).absolute()} as InstalledPackagesPath")
+            imagebasepath = Path(ipath + r'\fs-base-ui\html_ui\Textures\Menu\Control')
+            log.info(f"using  {imagebasepath.absolute()} as source for images")
 
-if imagepath.is_dir():
-    log.info(f"found directory with images {imagepath}")
-    #todo: check for some images
+if imagebasepath.is_dir():
+    log.info(f"found directory with images {imagebasepath}")
+    # todo: check for some images
+
+
+def get_steam_path():
+    # get the (base) directory of steam installation
+    # first try to autodetexct, if not found use user provided path
+    #    32-bit: HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam
+    #    64-bit: HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam
+    import winreg
+    steampath = None
+    try:
+        hkey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Valve\Steam")
+        steampath = Path(winreg.QueryValueEx(hkey, "InstallPath")[0])
+    except Exception as ex:
+        log.debug(f"Could not find 32bit steam installation ; Grund:{ex}")
+        try:
+            hkey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Wow6432Node\Valve\Steam")
+            steampath = winreg.QueryValueEx(hkey, "InstallPath")
+            return Path(steampath[0])
+        except Exception as ex:
+            log.error(f"Could not find 64bit steam installation ; Grund:{ex}")
+            return None
+
 
 # try to find path of inputprofiles:
-#    32-bit: HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam
-#    64-bit: HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam
-
-import winreg
-steampath=None
-try:
-    steampath = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Valve\Steam")
-except Exception as ex:
-    log.warning(f"Could not find steam key ; Grund:{ex}")
-    try:
-        steampath = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Wow6432Node\Valve\Steam")
-    except Exception as ex:
-        log.error(f"Could not find steam key ; Grund:{ex}")
-        #exit()
-
-if steampath is None:
-    steampath = Path(args.filename).absolute()
-    log.error("Please provide path to steam userprofiles!")
+installpath = None
+installpath = get_steam_path()
+if installpath is None:
+    installpath = Path(args.filename).absolute()
+    log.error("Please provide path to inputprofiles!")
     exit()
 else:
-    log.info(f"using steam installation path {steampath}")
+    log.info(f"searching input profiles from {installpath}")
 
-# if not args.output:
-#    output_filename = os.path.join(outputpath, args.output)
+inputprofilepath = None
+for p in installpath.glob('**/inputprofile_*'):
+    if p.is_file():
+        inputprofilepath = p.parent
+        log.info(f"found inputprofiles at {inputprofilepath}")
+        break
 
-# Create Filenames## # currentpath = Path.cwd()
-# if args.path:
-#     outputpath = Path(args.path)
-#     if not outputpath.exists:
-#         print("Outputpath does not exist, exiting...")
-#         exit(0)
-# else:
-#     outputpath = currentpath
-
-# workingpath = Path.cwd()
-# mainname = filename.stem
-# mainextension = filename.suffixes
-basepath = Path(filename.parent.absolute())
-basename = filename.name.removesuffix("".join(filename.suffixes))
-
-if not (filename.is_file()):
-    log.info(f"Try to find all inputprofiles in path {filename.parent}")
-    all_files = list(Path(filename).parent.glob("inputprofile_*"))
-    latex_filename = 'msfs_input_definitions.tex'
+all_files = []
+if not args.filename is None:
+    # user provided a single name, check if a filename fits:
+    filename = args.filename
+    basename = filename.name.removesuffix("".join(filename.suffixes))
+    if not (filename.is_file()):
+        log.info(f"Try to find all inputprofiles in path {filename.parent}")
+        all_files = list(Path(filename).parent.glob("inputprofile_*"))
+        latex_filename = 'msfs_input_definitions.tex'
+    else:
+        all_files = [filename]
+        latex_filename = inputprofilepath.joinpath(basename + '_input_definitions.tex')
 else:
-    all_files = [filename]
-    latex_filename = basepath.joinpath(basename + '_input_definitions.tex')
+    # user did not provided a name or pattern: search
+    all_files = list(inputprofilepath.glob("inputprofile_*"))
 
 log.info(f"found these inputprofiles:{all_files}")
-for filename in all_files:
-    log.info(f"{filename}")
 
 
 @log.catch
@@ -216,29 +224,31 @@ def tex_escape(text):
     try:
         res = regex.sub(lambda match: conv[match.group()], text)
     except Exception as ex:
-        log.warning(text+f"reason: {ex}")
+        log.warning(text + f"reason: {ex}")
         res = text
     return res
 
 
 import locale
+
 default_lang = locale.getdefaultlocale()[0]
 if args.language:
     default_lang = args.language
 # c:\msfs\Official\Steam\fs-base\en-US.locPak für englische Beschreibungen
 # c:\msfs\Official\Steam\fs-base\de-DE.locPak für deutsche Beschreibungen
-
+# ipath+ \Official\Steam\fs-base\
 # always load en-US as default:
 cmt = ''
 cmt_loc = ''
 try:
-    with open('data//en-US.locPak', encoding='utf-8') as f:
+    with open(Path(ipath + r"\Official\Steam\fs-base\en-US.locPak"), encoding='utf-8') as f:
         d = json.load(f)
     cmt = d['LocalisationPackage']['Strings']
 except:
     log.warning("Error loading default en-US language pack, no action descriptions available!")
 try:
-    with open('data//{}.locPak'.format(default_lang), encoding='utf-8') as f:
+    locp = Path(ipath + r"\\Official\\Steam\\fs-base\\" + '{}.locPak'.format(default_lang))
+    with open(locp, encoding='utf-8') as f:
         d = json.load(f)
     cmt_loc = d['LocalisationPackage']['Strings']
 except:
@@ -248,7 +258,6 @@ except:
 
 
 import xml.etree.ElementTree as ET
-import typing
 
 
 def read_inputprofile(filename):
@@ -517,6 +526,7 @@ def make_t320_chart(df):
         f.write(tex)
         f.close()
 
+
 #################################################################################################
 
 df = None
@@ -545,7 +555,6 @@ except:
 with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
     log.debug("" + df['Primary'] + "" + df['Action'])
 
-
 df = df.reset_index(drop=True)
 log.info(f"read all inputfiles, got {df.shape[0]} entries")
 #### Ab hier sind alle Kombinationen eingelesen und im dataframe hinterlegt
@@ -559,16 +568,12 @@ if args.xls:
     log.info(f"writing keybindings as Excel-File to {csvpath}")
     df.to_excel(csvpath.as_posix(), encoding='utf-8')
 
-
-#df=df.applymap(tex_escape)
-#create grouped dataframes
+# df=df.applymap(tex_escape)
+# create grouped dataframes
 df_grouped = df.groupby('Primary').agg(list).reset_index()
 df_grouped = df_grouped.sort_values(by=['Primary', 'DeviceName', 'Context'], key=natsort_keygen(), ignore_index=True)
 df_grouped['CTEX'] = df_grouped['Context'].astype(str) + ' (' + df_grouped['DeviceName'].astype(str) + ', ' + \
                      df_grouped['FriendlyName'].astype(str) + ')'
-
-
-
 
 if args.tex:
     create_latex(df_grouped)
