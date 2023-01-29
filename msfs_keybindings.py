@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # msfs inputprofile import script
 #
-# Copyright (c) [2023] [dc6jn]
+# Copyright (c) 2023 dc6jn
 
 
 import os, sys
@@ -69,11 +69,6 @@ except:
     log.addHandler(stdout_handler)
 
 log.debug(f"command line parameters: {args}")
-# log.debug("debug")
-# log.info("info")
-# log.warning("warning")
-# log.error("error")
-# log.critical("critical")
 
 ctx_to_keep = []
 ctx_to_drop = []
@@ -141,7 +136,9 @@ with open(usercfg_path, 'r') as file:
 
 if imagepath.is_dir():
     log.info(f"found directory with images {imagepath}")
+    #todo: check for some images
 
+# try to find path of inputprofiles:
 #    32-bit: HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam
 #    64-bit: HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam
 
@@ -194,6 +191,7 @@ for filename in all_files:
     log.info(f"{filename}")
 
 
+@log.catch
 def tex_escape(text):
     """
         :param text: a plain text message
@@ -218,8 +216,8 @@ def tex_escape(text):
     regex = re.compile('|'.join(re.escape(str(key)) for key in sorted(conv.keys(), key=lambda item: - len(item))))
     try:
         res = regex.sub(lambda match: conv[match.group()], text)
-    except:
-        log.debug(text)
+    except Exception as ex:
+        log.warning(text+f"reason: {ex}")
         res = text
     return res
 
@@ -340,23 +338,14 @@ def create_latex(df):
         s2d = prepare_field(row['DeviceName'])
         s2z1 = []
         for d in list(zip(s2c, s2d, s2f)):
-            s2z1.append(f"{tex_escape(d[0])} ({tex_escape(d[1])} ({tex_escape(d[2])})")
+            s2z1.append(f"{d[0]} ({d[1]} ({d[2]})")
 
         s2za = ' \\newline '.join(s2z1)
-        # s2f = ' \\newline '.join(s2f)
-        # s2d=' \\newline '.join(s2d)
-        # s2 = "\\textbf{" + f"{row['Primary']}" + " }{ \\tiny " + f"{s2d} ({s2f})    " + "}"
-        sP = "\\textbf{" + f"{row['Primary']}" + " }"
+        sP = "\\textbf{" + f"{prepare_field(row['Primary'])}" + " }"
         sC = "{" + f"{s2za} " + "}"
-        sA = ' \\newline '.join(row['Action'])
-        sD = ' \\newline '.join(row['Description'])
+        sA = ' \\newline '.join(prepare_field(row['Action']))
+        sD = ' \\newline '.join(prepare_field(row['Description']))
         texrow = '{}&{} &{} & {} \\\\\\midrule\n'.format(sP, sC, sA, sD)
-        #    texrow = texrow.replace("_", "\_")
-        #    texrow = texrow.replace("%", "\%")
-        #    texrow = texrow.replace("#", "\#")
-        #    if s2 in t320stick:
-        #           t320[s2]=' \\'.join(row['Action'])
-        # if args.verbose:
         log.debug(texrow)
         rows = rows + texrow
     texheader = r'''
@@ -463,7 +452,7 @@ def make_t320_chart(df):
             s2z1 = []
             for d in list(zip(s2c, s2d, s2f)):
                 # s2z1.append(f"{tex_escape(d[0])} ({tex_escape(d[1])} ({tex_escape(d[2])})")
-                s2z1.append(f"{tex_escape(d[0])} ({tex_escape(d[2])})")
+                s2z1.append(f"{prepare_field(d[0])} ({prepare_field(d[2])})")
 
             s2za = r' \newline '.join(s2z1)
             sC = "{" + f"{s2za} " + "}"
@@ -571,12 +560,13 @@ if args.xls:
     log.info(f"writing keybindings as Excel-File to {csvpath}")
     df.to_excel(csvpath.as_posix(), encoding='utf-8')
 
+
+#df=df.applymap(tex_escape)
 #create grouped dataframes
 df_grouped = df.groupby('Primary').agg(list).reset_index()
 df_grouped = df_grouped.sort_values(by=['Primary', 'DeviceName', 'Context'], key=natsort_keygen(), ignore_index=True)
 df_grouped['CTEX'] = df_grouped['Context'].astype(str) + ' (' + df_grouped['DeviceName'].astype(str) + ', ' + \
                      df_grouped['FriendlyName'].astype(str) + ')'
-df_grouped[['DeviceName', 'FriendlyName']] = df_grouped[['DeviceName', 'FriendlyName']].apply(tex_escape)
 
 
 
