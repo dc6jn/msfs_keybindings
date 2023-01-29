@@ -23,7 +23,7 @@ process_all_files = False
 
 parser = argparse.ArgumentParser(
     description='Read msfs2020 input device configurations and create readable documents')
-parser.add_argument('filename')
+parser.add_argument('filename',nargs="?")
 parser.add_argument('-l', '--language', help='Select language for descriptions, i.e. en-US, de-DE,...',
                     action='store', type=str, default='en-US')
 parser.add_argument('-c', '--csv', help='Save as CSV.', action='store_true')
@@ -90,7 +90,6 @@ if args.path:
 else:
     outputpath = currentpath
     log.info(f"Using outputpath {outputpath}")
-filename_path = Path(args.filename).absolute()
 
 usercfg_path = None
 appdata = os.getenv('APPDATA')
@@ -142,23 +141,24 @@ if imagepath.is_dir():
 #    32-bit: HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam
 #    64-bit: HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam
 
-# import winreg
-# steampath=None
-# try:
-#     steampath = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Valve\Steam")
-# except Exception as ex:
-#     log.warning(f"Could not find steam key ; Grund:{ex}")
-#     try:
-#         steampath = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Wow6432Node\Valve\Steam")
-#     except Exception as ex:
-#         log.error(f"Could not find steam key ; Grund:{ex}")
-#         #exit()
-#
-# if steampath is None:
-#     log.error("Please provide path to steam userprofiles!")
-#     exit()
-# else:
-#     log.info(f"using steam installation path {steampath}")
+import winreg
+steampath=None
+try:
+    steampath = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Valve\Steam")
+except Exception as ex:
+    log.warning(f"Could not find steam key ; Grund:{ex}")
+    try:
+        steampath = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Wow6432Node\Valve\Steam")
+    except Exception as ex:
+        log.error(f"Could not find steam key ; Grund:{ex}")
+        #exit()
+
+if steampath is None:
+    steampath = Path(args.filename).absolute()
+    log.error("Please provide path to steam userprofiles!")
+    exit()
+else:
+    log.info(f"using steam installation path {steampath}")
 
 # if not args.output:
 #    output_filename = os.path.join(outputpath, args.output)
@@ -171,7 +171,7 @@ if imagepath.is_dir():
 #         exit(0)
 # else:
 #     outputpath = currentpath
-filename = Path(args.filename).absolute()
+
 # workingpath = Path.cwd()
 # mainname = filename.stem
 # mainextension = filename.suffixes
