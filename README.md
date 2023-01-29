@@ -20,22 +20,22 @@ positional arguments:
   filename
 
 options:
-  -h, --help            show this help message and exit
-  -l LANGUAGE, --language LANGUAGE
-                        Select language for descriptions, i.e. en-US, de-DE,...
-  -c, --csv             Save as CSV.
-  -x, --xls             Save as Excel xls.
-  -t, --tex             Save as Latex-Template
-  -k KEEP, --keep KEEP  keep these CONTEXT entrys
-  -d DROP, --drop DROP  drop these CONTEXT entrys
-  -o OUTPUT, --output OUTPUT
-                        Name for output file
-  -p PATH, --path PATH  Path for output image
-  -i IMAGESPATH, --imagespath IMAGESPATH
-                        Path for device images
-  -u USERCFGPATH, --usercfgpath USERCFGPATH
-                        Path for user config
-  -v {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --verbose {DEBUG,INFO,WARNING,ERROR,CRITICAL}
-                        Set the logging level
+  -h, --help            show this help message and exit  
+  -l LANGUAGE, --language LANGUAGE  
+                        Select language for descriptions, i.e. en-US, de-DE,...  
+  -c, --csv             Save as CSV.  
+  -x, --xls             Save as Excel xls.  
+  -t, --tex             Save as Latex-Template  
+  -k KEEP, --keep KEEP  keep these CONTEXT entrys  
+  -d DROP, --drop DROP  drop these CONTEXT entrys  
+  -o OUTPUT, --output OUTPUT  
+                        Name for output file  
+  -p PATH, --path PATH  Path for output image  
+  -i IMAGESPATH, --imagespath IMAGESPATH  
+                        Path for device images  
+  -u USERCFGPATH, --usercfgpath USERCFGPATH  
+                        Path for user config  
+  -v {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --verbose {DEBUG,INFO,WARNING,ERROR,CRITICAL}  
+                        Set the logging level  
 
 
