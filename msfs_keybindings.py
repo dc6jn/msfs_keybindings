@@ -126,20 +126,26 @@ with open(usercfg_path, 'r') as file:
     for line in lines:
         if line.startswith('InstalledPackagesPath'):
             line = str(line)
-            log.info(f'found installation path {line}')
             ipath = str(line)
             ipath = ipath.split(' ')[1]
             ipath = ipath.replace('"', '')
             ipath = ipath.replace("'", '')
             ipath = ipath.replace("\n", '')
-            log.info(f"Using {Path(ipath).absolute()} as InstalledPackagesPath")
+            log.info(f'found installation path {Path(ipath).absolute()} in {usercfg_path}')
             imagebasepath = Path(ipath + r'\fs-base-ui\html_ui\Textures\Menu\Control')
             log.info(f"using  {imagebasepath.absolute()} as source for images")
 
 if imagebasepath.is_dir():
     log.info(f"found directory with images {imagebasepath}")
     # todo: check for some images
-
+else:
+    if args.imagespath is not None:
+        imagepath_manual = Path(args.imagespath).absolute()
+        if imagepath_manual.is_dir():
+            imagebasepath = imagepath_manual
+            log.info(f"manual override for images path, using {imagebasepath}")
+    else:
+        log.warning(f"{imagebasepath.absolute()} does not exist!")
 
 def get_steam_path():
     # get the (base) directory of steam installation
