@@ -37,7 +37,7 @@ parser.add_argument('-o', '--output', help='Name for output file')
 parser.add_argument('-p', '--path', help='Path for output image')
 parser.add_argument('-i', '--imagespath', help='Path for device images')
 parser.add_argument('-u', '--usercfgpath', help='Path for user config')
-parser.add_argument("-v", "--verbose", dest="logLevel", type=str.upper, default="WARNING",
+parser.add_argument("-v", "--verbose", dest="logLevel", type=str.upper, default="INFO",
                     choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help="Set the logging level")
 
 args = parser.parse_args()
@@ -98,8 +98,8 @@ def get_userconfig_path():
     usercfg_path = None
     appdata = os.getenv('APPDATA')
     localappdata = os.getenv('LOCALAPPDATA')
-    usercfg_ms = Path(localappdata + "\\Packages\\Microsoft.FlightSimulator_8wekyb3d8bbwe\\LocalCache\\UserCfg.opt")
-    usercfg_steam = Path(appdata + "\\Microsoft Flight Simulator\\UserCfg.opt")
+    usercfg_ms = Path(localappdata).joinpath("/Packages/Microsoft.FlightSimulator_8wekyb3d8bbwe/LocalCache/UserCfg.opt")
+    usercfg_steam = Path(appdata).joinpath("/Microsoft Flight Simulator/UserCfg.opt")
     if usercfg_ms.is_file():
         log.info("autodetected  MS-Version of flight simulator")
         usercfg_path = usercfg_ms
