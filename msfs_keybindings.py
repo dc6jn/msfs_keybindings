@@ -94,6 +94,7 @@ else:
     log.info(f"Using outputpath {outputpath}")
 
 
+@log.catch
 def get_userconfig_path():
     # find UserCfg.opt
     usercfg_path = None
@@ -153,7 +154,7 @@ if imagebasepath and imagebasepath.is_dir():
 else:
     log.warning("could not find path to controller images")
 
-
+@log.catch
 def get_steam_path():
     # get the (base) directory of steam installation
     # first try to autodetexct, if not found use user provided path
@@ -193,7 +194,6 @@ else:
     installpath = None
     installpath = get_steam_path()
     if installpath is None:
-        installpath = Path(args.filename).absolute()
         log.error("Please provide path to inputprofiles!")
         exit()
     else:
