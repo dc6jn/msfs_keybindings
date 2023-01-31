@@ -39,3 +39,11 @@ options:
                         Set the logging level  
 
 
+<pre><font color="#55FF55"><b></b></font>:<font color="#5555FF"><b>~/Dokumente/msfs_keybindings</b></font>$ python ./msfs_keybindings.py data/inputprofile_0306217088 
+<font color="#00AA00">2023-01-31 07:46:51.950</font> | <b>INFO    </b> | <font color="#5555FF">msfs_keybindings.py:</font><font color="#5555FF"><b>  94</b></font> <font color="#00AAAA">__main__</font>:<font color="#00AAAA">&lt;module&gt;</font> | <b>Using outputpath ***/Dokumente/msfs_keybindings</b>
+<font color="#00AA00">2023-01-31 07:46:51.954</font> | <b>INFO    </b> | <font color="#5555FF">msfs_keybindings.py:</font><font color="#5555FF"><b> 212</b></font> <font color="#00AAAA">__main__</font>:<font color="#00AAAA">&lt;module&gt;</font> | <b>I found these inputprofiles:[PosixPath(&apos;data/inputprofile_0306217088&apos;)]</b>
+<font color="#00AA00">2023-01-31 07:46:51.956</font> | <b>INFO    </b> | <font color="#5555FF">msfs_keybindings.py:</font><font color="#5555FF"><b> 278</b></font> <font color="#00AAAA">__main__</font>:<font color="#00AAAA">read_inputprofile</font> | <b>handling inputprofile data/inputprofile_0306217088</b>
+<font color="#00AA00">2023-01-31 07:46:51.959</font> | <b>INFO    </b> | <font color="#5555FF">msfs_keybindings.py:</font><font color="#5555FF"><b> 326</b></font> <font color="#00AAAA">__main__</font>:<font color="#00AAAA">read_inputprofile</font> | <b>COCKPIT_CAMERA - KEY_COCKPIT_QUICKVIEW3 : Joystick Pov Right</b>
+<font color="#00AA00">2023-01-31 07:46:51.961</font> | <b>INFO    </b> | <font color="#5555FF">msfs_keybindings.py:</font><font color="#5555FF"><b> 326</b></font> <font color="#00AAAA">__main__</font>:<font color="#00AAAA">read_inputprofile</font> | <b>COCKPIT_CAMERA - KEY_COCKPIT_QUICKVIEW4 : JoystickPov Left</b>
+<font color="#00AA00">2023-01-31 07:46:51.962</font> | <b>INFO    </b> | <font color="#5555FF">msfs_keybindings.py:</font><font color="#5555FF"><b> 326</b></font> <font color="#00AAAA">__main__</font>:<font color="#00AAAA">read_inputprofile</font> | <b>EXTERNAL_CAMERA - KEY_CHASE_QUICKVIEW1 : Joystick Pov Right</b>
+</pre>
