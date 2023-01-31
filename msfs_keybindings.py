@@ -105,8 +105,8 @@ def get_userconfig_path():
             log.info(f"manual override for config path, using {usercfg_path}")
             return usercfg_path
     # nothing provided or found, search:
-    appdata = Path(os.getenv('APPDATA'),'.')
-    localappdata = Path(os.getenv('LOCALAPPDATA'),'.')
+    appdata = Path(os.getenv('APPDATA'), '.')
+    localappdata = Path(os.getenv('LOCALAPPDATA'), '.')
     usercfg_ms = localappdata.joinpath("Packages/Microsoft.FlightSimulator_8wekyb3d8bbwe/LocalCache/UserCfg.opt")
     usercfg_steam = appdata.joinpath("Microsoft Flight Simulator/UserCfg.opt")
     if usercfg_ms.is_file():
@@ -119,17 +119,18 @@ def get_userconfig_path():
         log.error(f"no valid config path provided or found")
     return usercfg_path
 
+
 # hier liegen die Verzeichnisse mit den Bildern: c:\msfs\fs-base-ui\html_ui\Textures\Menu\Control\
 
 # from UserCfg.opt we get the InstalledPackagesPath
-imagebasepath=None
+imagebasepath = None
 if args.imagespath is not None:
     imagepath_manual = Path(args.imagespath).absolute()
     if imagepath_manual.is_dir():
         imagebasepath = imagepath_manual
         log.info(f"manual override for images path, using {imagebasepath}")
 else:
-    #find file UserCfg.opt and read location of msfs installation:
+    # find file UserCfg.opt and read location of msfs installation:
     usercfg_path = get_userconfig_path()
     if usercfg_path:
         with open(usercfg_path, 'r') as file:
@@ -147,10 +148,11 @@ else:
                     log.info(f"using  {imagebasepath.absolute()} as source for images")
 
 if imagebasepath and imagebasepath.is_dir():
-        log.info(f"found directory with images {imagebasepath}")
-    # todo: check for some images
+    log.info(f"found directory with images {imagebasepath}")
+# todo: check for some images
 else:
     log.warning("could not find path to controller images")
+
 
 def get_steam_path():
     # get the (base) directory of steam installation
@@ -174,26 +176,10 @@ def get_steam_path():
 
 
 # try to find path of inputprofiles:
-installpath = None
-installpath = get_steam_path()
-if installpath is None:
-    installpath = Path(args.filename).absolute()
-    log.error("Please provide path to inputprofiles!")
-    exit()
-else:
-    log.info(f"searching input profiles from {installpath}")
-
-inputprofilepath = None
-for p in installpath.glob('**/inputprofile_*'):
-    if p.is_file():
-        inputprofilepath = p.parent
-        log.info(f"found inputprofiles at {inputprofilepath}")
-        break
-
 all_files = []
 if not args.filename is None:
     # user provided a single name, check if a filename fits:
-    filename = args.filename
+    filename = Path(args.filename)
     basename = filename.name.removesuffix("".join(filename.suffixes))
     if not (filename.is_file()):
         log.info(f"Try to find all inputprofiles in path {filename.parent}")
@@ -201,12 +187,28 @@ if not args.filename is None:
         latex_filename = 'msfs_input_definitions.tex'
     else:
         all_files = [filename]
-        latex_filename = inputprofilepath.joinpath(basename + '_input_definitions.tex')
+        latex_filename = outputpath.joinpath(basename + '_.tex')
 else:
     # user did not provided a name or pattern: search
+    installpath = None
+    installpath = get_steam_path()
+    if installpath is None:
+        installpath = Path(args.filename).absolute()
+        log.error("Please provide path to inputprofiles!")
+        exit()
+    else:
+        log.info(f"searching input profiles from {installpath}")
+
+    inputprofilepath = None
+    for p in installpath.glob('**/inputprofile_*'):
+        if p.is_file():
+            inputprofilepath = p.parent
+            log.info(f"found inputprofiles at {inputprofilepath}")
+            break
+
     all_files = list(inputprofilepath.glob("inputprofile_*"))
 
-log.info(f"found these inputprofiles:{all_files}")
+log.info(f"I found these inputprofiles:{all_files}")
 
 
 @log.catch
