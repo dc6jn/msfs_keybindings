@@ -6,6 +6,7 @@
 # personalized profiles: [steampath]\userdata\[your user number]\1250410\remote
 
 import os, sys
+import pathlib
 from pathlib import Path
 import argparse
 import re
@@ -96,56 +97,60 @@ else:
 def get_userconfig_path():
     # find UserCfg.opt
     usercfg_path = None
-    appdata = os.getenv('APPDATA')
-    localappdata = os.getenv('LOCALAPPDATA')
-    usercfg_ms = Path(localappdata).joinpath("/Packages/Microsoft.FlightSimulator_8wekyb3d8bbwe/LocalCache/UserCfg.opt")
-    usercfg_steam = Path(appdata).joinpath("/Microsoft Flight Simulator/UserCfg.opt")
+    # user provided a path, try first:
+    if args.usercfgpath is not None:
+        usercfg_manual = Path(args.usercfgpath).joinpath("UserCfg.opt").absolute()
+        if usercfg_manual.is_file():
+            usercfg_path = usercfg_manual
+            log.info(f"manual override for config path, using {usercfg_path}")
+            return usercfg_path
+    # nothing provided or found, search:
+    appdata = Path(os.getenv('APPDATA'),'.')
+    localappdata = Path(os.getenv('LOCALAPPDATA'),'.')
+    usercfg_ms = localappdata.joinpath("Packages/Microsoft.FlightSimulator_8wekyb3d8bbwe/LocalCache/UserCfg.opt")
+    usercfg_steam = appdata.joinpath("Microsoft Flight Simulator/UserCfg.opt")
     if usercfg_ms.is_file():
         log.info("autodetected  MS-Version of flight simulator")
         usercfg_path = usercfg_ms
     elif usercfg_steam.is_file():
         log.info("autodetected  steam version of flight simulator")
         usercfg_path = usercfg_steam
-    elif args.usercfgpath is not None:
-        usercfg_manual = Path(args.usercfgpath + "\\UserCfg.opt").absolute()
-        if usercfg_manual.is_file():
-            usercfg_path = usercfg_manual
-            log.info(f"manual override for config path, using {usercfg_path}")
     if usercfg_path is None:
         log.error(f"no valid config path provided or found")
     return usercfg_path
 
-
-usercfg_path = get_userconfig_path()
-
 # hier liegen die Verzeichnisse mit den Bildern: c:\msfs\fs-base-ui\html_ui\Textures\Menu\Control\
 
 # from UserCfg.opt we get the InstalledPackagesPath
-with open(usercfg_path, 'r') as file:
-    lines = file.readlines()
-    for line in lines:
-        if line.startswith('InstalledPackagesPath'):
-            line = str(line)
-            ipath = str(line)
-            ipath = ipath.split(' ')[1]
-            ipath = ipath.replace('"', '')
-            ipath = ipath.replace("'", '')
-            ipath = ipath.replace("\n", '')
-            log.info(f'found installation path {Path(ipath).absolute()} in {usercfg_path}')
-            imagebasepath = Path(ipath + r'\fs-base-ui\html_ui\Textures\Menu\Control')
-            log.info(f"using  {imagebasepath.absolute()} as source for images")
+imagebasepath=None
+if args.imagespath is not None:
+    imagepath_manual = Path(args.imagespath).absolute()
+    if imagepath_manual.is_dir():
+        imagebasepath = imagepath_manual
+        log.info(f"manual override for images path, using {imagebasepath}")
+else:
+    #find file UserCfg.opt and read location of msfs installation:
+    usercfg_path = get_userconfig_path()
+    if usercfg_path:
+        with open(usercfg_path, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                if line.startswith('InstalledPackagesPath'):
+                    line = str(line)
+                    ipath = str(line)
+                    ipath = ipath.split(' ')[1]
+                    ipath = ipath.replace('"', '')
+                    ipath = ipath.replace("'", '')
+                    ipath = ipath.replace("\n", '')
+                    log.info(f'found installation path {Path(ipath).absolute()} in {usercfg_path}')
+                    imagebasepath = Path(ipath + r'\fs-base-ui\html_ui\Textures\Menu\Control')
+                    log.info(f"using  {imagebasepath.absolute()} as source for images")
 
-if imagebasepath.is_dir():
-    log.info(f"found directory with images {imagebasepath}")
+if imagebasepath and imagebasepath.is_dir():
+        log.info(f"found directory with images {imagebasepath}")
     # todo: check for some images
 else:
-    if args.imagespath is not None:
-        imagepath_manual = Path(args.imagespath).absolute()
-        if imagepath_manual.is_dir():
-            imagebasepath = imagepath_manual
-            log.info(f"manual override for images path, using {imagebasepath}")
-    else:
-        log.warning(f"{imagebasepath.absolute()} does not exist!")
+    log.warning("could not find path to controller images")
 
 def get_steam_path():
     # get the (base) directory of steam installation
