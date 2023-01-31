@@ -25,7 +25,7 @@ process_all_files = False
 
 parser = argparse.ArgumentParser(
     description='Read msfs2020 input device configurations and create readable documents')
-parser.add_argument('filename', nargs="?", help="if provided a path to all inputprofiles or a single inputprofile")
+parser.add_argument('inputprofile', nargs="?", help="if provided a path to all inputprofiles or a single inputprofile")
 parser.add_argument('-l', '--language', help='Select language for descriptions, i.e. en-US, de-DE,...',
                     action='store', type=str, default='en-US')
 parser.add_argument('-c', '--csv', help='Save as CSV.', action='store_true')
@@ -34,8 +34,7 @@ parser.add_argument('-t', '--tex', help='Save as Latex-Template', action='store_
 group = parser.add_mutually_exclusive_group(required=False)
 group.add_argument('-k', '--keep', help='keep these CONTEXT entrys', type=str.upper)
 group.add_argument('-d', '--drop', help='drop these CONTEXT entrys', type=str.upper)
-parser.add_argument('-o', '--output', help='Name for output file')
-parser.add_argument('-p', '--path', help='Path for output image')
+parser.add_argument('-o', '--outputpath', help='Name for output directory')
 parser.add_argument('-i', '--imagespath', help='Path for device images')
 parser.add_argument('-u', '--usercfgpath', help='Path for user config')
 parser.add_argument("-v", "--verbose", dest="logLevel", type=str.upper, default="INFO",
@@ -84,10 +83,11 @@ if args.drop:
 # Create Filenames
 
 currentpath = Path.cwd()
-if args.path:
-    outputpath = Path(args.path)
+if args.outputpath:
+    outputpath = Path(args.outputpath)
     if not outputpath.exists:
         log.error("OutputPath does not exist, exiting...")
+        parser.print_help()
         exit(0)
 else:
     outputpath = currentpath
@@ -178,16 +178,16 @@ def get_steam_path():
 
 # try to find path of inputprofiles:
 all_files = []
-if not args.filename is None:
+if not args.inputprofile is None:
     # user provided a single name, check if a filename fits:
-    filename = Path(args.filename)
-    basename = filename.name.removesuffix("".join(filename.suffixes))
-    if not (filename.is_file()):
-        log.info(f"Try to find all inputprofiles in path {filename.parent}")
-        all_files = list(Path(filename).parent.glob("inputprofile_*"))
+    inputprofile = Path(args.inputprofile)
+    basename = inputprofile.name.removesuffix("".join(inputprofile.suffixes))
+    if not (inputprofile.is_file()):
+        log.info(f"Try to find all inputprofiles in path {inputprofile.parent}")
+        all_files = list(Path(inputprofile).parent.glob("inputprofile_*"))
         latex_filename = 'msfs_input_definitions.tex'
     else:
-        all_files = [filename]
+        all_files = [inputprofile]
         latex_filename = outputpath.joinpath(basename + '_.tex')
 else:
     # user did not provided a name or pattern: search
@@ -195,6 +195,7 @@ else:
     installpath = get_steam_path()
     if installpath is None:
         log.error("Please provide path to inputprofiles!")
+        parser.print_help()
         exit()
     else:
         log.info(f"searching input profiles from {installpath}")
@@ -543,8 +544,8 @@ def make_t320_chart(df):
 #################################################################################################
 
 df = None
-for filename in all_files:
-    dfn = read_inputprofile(filename)
+for inputprofile in all_files:
+    dfn = read_inputprofile(inputprofile)
     if df is None:
         df = dfn
     else:
